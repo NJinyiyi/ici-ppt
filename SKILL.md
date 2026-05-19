@@ -67,3 +67,14 @@ Use these layouts as appropriate:
 ## Quality Checks
 
 Before returning the deck, verify PNG existence and size, PPTX existence and size, slide order, and text density.
+
+## Runtime Dependencies
+
+The bundled runner auto-installs missing `playwright`, `Pillow`, and Playwright Chromium into the current Python environment on first use. This makes the skill usable after installation without a separate virtual environment setup.
+
+Use `--no-auto-install` or set `ICI_PPT_AUTO_INSTALL=0` when automatic installation is not allowed. If automatic installation fails because the environment is offline or locked down, tell the user to run:
+
+```bash
+python3 -m pip install --user playwright Pillow
+python3 -m playwright install chromium
+```

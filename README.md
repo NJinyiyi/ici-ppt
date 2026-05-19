@@ -45,17 +45,34 @@ ici-ppt/
 
 ## Install
 
-Recommended:
+`ici-ppt` can auto-install missing runtime dependencies into the current Python environment on first run. No virtual environment is required.
 
 ```bash
 cd ici-ppt
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python -m playwright install chromium
+python3 src/main.py --input examples/example_input.md --output output/demo.pptx --title "AI Generated Creativity Never Ends"
 ```
 
-If Playwright is not installed, the renderer tries common local Chrome/Chromium executables.
+On first run, the script checks for `playwright`, `Pillow`, and Playwright Chromium. If something is missing, it runs:
+
+```bash
+python3 -m pip install --user playwright Pillow
+python3 -m playwright install chromium
+```
+
+To install manually instead:
+
+```bash
+python3 -m pip install --user playwright Pillow
+python3 -m playwright install chromium
+```
+
+To disable automatic installation:
+
+```bash
+python3 src/main.py --input examples/example_input.md --output output/demo.pptx --no-auto-install
+```
+
+If Playwright is not available but local Chrome/Chromium is installed, the renderer tries that as a fallback. If browser rendering is unavailable in a restricted environment, use `--renderer pil`.
 
 ## Run Demo
 

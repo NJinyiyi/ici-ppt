@@ -5,6 +5,7 @@ import json
 import re
 from pathlib import Path
 
+from dependencies import ensure_dependencies
 from html_renderer import render_html_files, render_pngs
 from planner import infer_title, plan_deck, read_input
 from pptx_builder import build_pptx_from_pngs
@@ -24,7 +25,10 @@ def main() -> None:
     parser.add_argument("--pages", type=int, default=10, help="Target slide count, default 10.")
     parser.add_argument("--workdir", default="output/build", help="Intermediate HTML/PNG directory.")
     parser.add_argument("--renderer", choices=["auto", "browser", "pil"], default="auto", help="PNG renderer. Use pil only as a constrained-environment fallback.")
+    parser.add_argument("--no-auto-install", action="store_true", help="Disable automatic dependency installation.")
     args = parser.parse_args()
+
+    ensure_dependencies(renderer=args.renderer, auto_install=not args.no_auto_install)
 
     project_dir = Path(__file__).resolve().parents[1]
     markdown = read_input(args.input)
