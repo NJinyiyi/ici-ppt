@@ -11,6 +11,30 @@
   --ici-accent-yellow: #F5C84C;
 }
 
+@font-face {
+  font-family: "Alibaba PuHuiTi";
+  src: url("../fonts/Alibaba-PuHuiTi-Regular.otf") format("opentype");
+  font-weight: 400;
+}
+
+@font-face {
+  font-family: "Alibaba PuHuiTi";
+  src: url("../fonts/Alibaba-PuHuiTi-Medium.otf") format("opentype");
+  font-weight: 600;
+}
+
+@font-face {
+  font-family: "Alibaba PuHuiTi";
+  src: url("../fonts/Alibaba-PuHuiTi-Bold.otf") format("opentype");
+  font-weight: 700;
+}
+
+@font-face {
+  font-family: "Alibaba PuHuiTi";
+  src: url("../fonts/Alibaba-PuHuiTi-Heavy.otf") format("opentype");
+  font-weight: 850;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -26,7 +50,7 @@ body {
 }
 
 body {
-  font-family: "Inter", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+  font-family: "Alibaba PuHuiTi", "Noto Sans SC", "Source Han Sans SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
   color: var(--ici-dark-text);
 }
 

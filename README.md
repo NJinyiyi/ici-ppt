@@ -1,12 +1,14 @@
 # ici-ppt
 
-`ici-ppt` is a ChatGPT/Codex Skill project for generating ICI Lab style PowerPoint decks from Markdown notes, papers, reports, outlines, or raw content.
+`ici-ppt` is a ChatGPT/Codex Skill project for generating editable ICI Lab style PowerPoint decks from Markdown notes, papers, reports, outlines, or raw content.
 
 The pipeline is:
 
 ```text
-Markdown input -> deck plan -> HTML/CSS slides -> 1920x1080 PNGs -> 16:9 PPTX
+Markdown input -> deck plan -> editable PowerPoint text/shapes -> 16:9 PPTX
 ```
+
+The previous high-fidelity PNG workflow is still available with `--pptx-mode image`.
 
 ## Structure
 
@@ -19,6 +21,7 @@ ici-ppt/
 ├── src/
 │   ├── main.py
 │   ├── planner.py
+│   ├── editable_pptx_builder.py
 │   ├── html_renderer.py
 │   ├── pptx_builder.py
 │   ├── quality.py
@@ -38,6 +41,11 @@ ici-ppt/
 ├── assets/
 │   └── template.pptx
 ├── fonts/
+│   ├── Alibaba-PuHuiTi-Regular.otf
+│   ├── Alibaba-PuHuiTi-Medium.otf
+│   ├── Alibaba-PuHuiTi-Bold.otf
+│   ├── Alibaba-PuHuiTi-Heavy.otf
+│   └── Alibaba-PuHuiTi-Light.otf
 ├── examples/
 │   └── example_input.md
 └── output/
@@ -52,7 +60,7 @@ cd ici-ppt
 python3 src/main.py --input examples/example_input.md --output output/demo.pptx --title "AI Generated Creativity Never Ends"
 ```
 
-On first run, the script checks for `python-pptx`, `Pillow`, `playwright`, and Playwright Chromium. If something is missing, it runs:
+On first run, the default editable mode checks for `python-pptx`. Image mode also checks for `Pillow`, `playwright`, and Playwright Chromium. If something is missing, it runs:
 
 ```bash
 python3 -m pip install --user python-pptx Pillow playwright
@@ -81,13 +89,17 @@ cd ici-ppt
 python src/main.py --input examples/example_input.md --output output/demo.pptx --title "AI Generated Creativity Never Ends"
 ```
 
-In a local environment where browser automation is unavailable, use the constrained-environment fallback:
+To use the high-fidelity rendered-image workflow:
 
 ```bash
-python src/main.py --input examples/example_input.md --output output/demo.pptx --title "AI Generated Creativity Never Ends" --renderer pil
+python src/main.py --input examples/example_input.md --output output/demo-image.pptx --title "AI Generated Creativity Never Ends" --pptx-mode image
 ```
 
-For production Skill use, keep the default browser renderer after installing Playwright; the `pil` renderer is only a local fallback for environments where Chromium cannot run.
+In a local environment where browser automation is unavailable, image mode can use the constrained-environment fallback:
+
+```bash
+python src/main.py --input examples/example_input.md --output output/demo-image.pptx --title "AI Generated Creativity Never Ends" --pptx-mode image --renderer pil
+```
 
 Analyze the reference template:
 
@@ -115,11 +127,14 @@ The first level-1 heading is used as the title when `--title` is not provided. L
 
 ## Output
 
-The generated `.pptx` is 16:9 widescreen. Every slide is a full-page `1920x1080` PNG rendered from HTML/CSS, and `python-pptx` assembles the final deck to avoid fragile hand-written OOXML.
+The generated `.pptx` is 16:9 widescreen. Default output uses editable PowerPoint text boxes and native shapes with Alibaba PuHuiTi font names applied. Image mode renders each slide as a full-page `1920x1080` PNG and uses `python-pptx` to assemble the final deck.
+
+PowerPoint does not automatically install or embed fonts from the Skill folder. To see the editable deck exactly as designed on another machine, install the bundled Alibaba PuHuiTi OTF files from `fonts/`.
 
 ## Common Issues
 
-- `No renderer available`: install Playwright and Chromium, or install Google Chrome/Chromium locally.
+- `Font fallback appears`: install the bundled Alibaba PuHuiTi OTF files from `fonts/`.
+- `No renderer available`: image mode needs Playwright and Chromium, or Google Chrome/Chromium locally.
 - `PowerPoint asks to repair the file`: make sure this version is using `python-pptx`; run `python3 -m pip install --user python-pptx` and regenerate the deck.
 - `PNG size mismatch`: rerun with Playwright; some Chrome CLI installations ignore `--window-size` under unusual display settings.
 - `PPTX too small`: inspect `output/rendered` and verify the slide PNGs were generated.
@@ -129,4 +144,4 @@ The generated `.pptx` is 16:9 widescreen. Every slide is a full-page `1920x1080`
 1. Keep `SKILL.md` at the root of the `ici-ppt` folder.
 2. Keep code and assets in the same folder.
 3. Zip the entire `ici-ppt` directory or copy it into the skills directory used by your ChatGPT/Codex environment.
-4. Instruct the model to use `src/main.py` for deterministic generation and to preserve the HTML-to-PNG-to-PPTX workflow.
+4. Instruct the model to use `src/main.py` for deterministic generation. Default to editable PPTX mode; use `--pptx-mode image` only when exact rendered visual fidelity matters more than editability.

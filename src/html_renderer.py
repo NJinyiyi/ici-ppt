@@ -20,7 +20,7 @@ SLIDE_HEIGHT = 1080
 def render_html_files(slides: list[Slide], project_dir: Path, out_dir: Path) -> list[Path]:
     out_dir.mkdir(parents=True, exist_ok=True)
     html_paths: list[Path] = []
-    styles = (project_dir / "styles" / "ici-theme.css").read_text(encoding="utf-8")
+    styles = (project_dir / "styles" / "ici-theme.css").read_text(encoding="utf-8") + "\n" + font_face_css(project_dir)
     for index, slide in enumerate(slides, start=1):
         layout_path = project_dir / "layouts" / f"{slide.layout}.html"
         if not layout_path.exists():
@@ -31,6 +31,26 @@ def render_html_files(slides: list[Slide], project_dir: Path, out_dir: Path) -> 
         path.write_text(doc, encoding="utf-8")
         html_paths.append(path)
     return html_paths
+
+
+def font_face_css(project_dir: Path) -> str:
+    fonts = {
+        300: "Alibaba-PuHuiTi-Light.otf",
+        400: "Alibaba-PuHuiTi-Regular.otf",
+        600: "Alibaba-PuHuiTi-Medium.otf",
+        700: "Alibaba-PuHuiTi-Bold.otf",
+        850: "Alibaba-PuHuiTi-Heavy.otf",
+    }
+    rules = []
+    for weight, filename in fonts.items():
+        path = project_dir / "fonts" / filename
+        if path.exists():
+            rules.append(
+                '@font-face { font-family: "Alibaba PuHuiTi"; '
+                f'src: url("{path.resolve().as_uri()}") format("opentype"); '
+                f"font-weight: {weight}; font-style: normal; }}"
+            )
+    return "\n".join(rules)
 
 
 def fill_template(template: str, slide: Slide) -> str:
@@ -252,28 +272,31 @@ def render_with_pillow(slides: list[Slide], png_dir: Path) -> list[Path]:
 def load_fonts():
     from PIL import ImageFont
 
+    project_fonts = Path(__file__).resolve().parents[1] / "fonts"
     candidates = [
+        str(project_fonts / "Alibaba-PuHuiTi-Regular.otf"),
         "/System/Library/Fonts/PingFang.ttc",
         "/System/Library/Fonts/Supplemental/Arial Unicode.ttf",
         "/Library/Fonts/Arial Unicode.ttf",
     ]
 
-    def font(size: int):
-        for path in candidates:
+    def font(size: int, preferred: str = "Alibaba-PuHuiTi-Regular.otf"):
+        preferred_path = project_fonts / preferred
+        for path in [str(preferred_path), *candidates]:
             if Path(path).exists():
                 return ImageFont.truetype(path, size=size)
         return ImageFont.load_default()
 
     return {
-        "hero": font(88),
-        "title": font(76),
-        "content_title": font(52),
-        "subtitle": font(34),
-        "body": font(30),
-        "small_bold": font(24),
-        "toc_no": font(46),
-        "toc": font(34),
-        "giant": font(190),
+        "hero": font(88, "Alibaba-PuHuiTi-Heavy.otf"),
+        "title": font(76, "Alibaba-PuHuiTi-Heavy.otf"),
+        "content_title": font(52, "Alibaba-PuHuiTi-Heavy.otf"),
+        "subtitle": font(34, "Alibaba-PuHuiTi-Regular.otf"),
+        "body": font(30, "Alibaba-PuHuiTi-Regular.otf"),
+        "small_bold": font(24, "Alibaba-PuHuiTi-Bold.otf"),
+        "toc_no": font(46, "Alibaba-PuHuiTi-Heavy.otf"),
+        "toc": font(34, "Alibaba-PuHuiTi-Bold.otf"),
+        "giant": font(190, "Alibaba-PuHuiTi-Heavy.otf"),
     }
 
 

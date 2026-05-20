@@ -6,13 +6,15 @@ import subprocess
 import sys
 
 
-def ensure_dependencies(renderer: str = "auto", auto_install: bool = True) -> None:
+def ensure_dependencies(renderer: str = "auto", pptx_mode: str = "image", auto_install: bool = True) -> None:
     """Install runtime dependencies into the current Python environment when missing."""
     if os.environ.get("ICI_PPT_AUTO_INSTALL", "").lower() in {"0", "false", "no"}:
         auto_install = False
 
-    required_packages = {"PIL": "Pillow", "pptx": "python-pptx"}
-    if renderer != "pil":
+    required_packages = {"pptx": "python-pptx"}
+    if pptx_mode == "image":
+        required_packages["PIL"] = "Pillow"
+    if pptx_mode == "image" and renderer != "pil":
         required_packages["playwright"] = "playwright"
 
     missing = [pip_name for module, pip_name in required_packages.items() if importlib.util.find_spec(module) is None]
@@ -26,7 +28,7 @@ def ensure_dependencies(renderer: str = "auto", auto_install: bool = True) -> No
             )
         install_python_packages(missing)
 
-    if renderer != "pil":
+    if pptx_mode == "image" and renderer != "pil":
         ensure_playwright_chromium(auto_install=auto_install)
 
 

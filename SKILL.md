@@ -1,11 +1,11 @@
 ---
 name: ici-ppt
-description: Generate ICI Lab style PowerPoint presentations from a topic, paper, report, outline, or raw notes. Use this skill when the user asks for an ICI Lab / Intelligent Creativity and Interaction Lab / Zhejiang University academic PPTX deck, especially when the output must be a .pptx built from HTML/CSS rendered slides.
+description: Generate editable ICI Lab style PowerPoint presentations from a topic, paper, report, outline, or raw notes. Use this skill when the user asks for an ICI Lab / Intelligent Creativity and Interaction Lab / Zhejiang University academic PPTX deck, especially when the output must be a .pptx with editable PowerPoint text and shapes.
 ---
 
 # ici-ppt
 
-Use this skill to create ICI Lab style `.pptx` files from user-provided themes, papers, reports, outlines, or notes.
+Use this skill to create editable ICI Lab style `.pptx` files from user-provided themes, papers, reports, outlines, or notes.
 
 ## Inputs
 
@@ -21,14 +21,16 @@ If important information is missing, make reasonable academic defaults and keep 
 
 ## Output
 
-Always produce a `.pptx` file. The standard pipeline is:
+Always produce a `.pptx` file. Default output uses editable PowerPoint text boxes and native shapes. The optional `--pptx-mode image` output preserves the previous full-slide PNG workflow.
 
 1. Understand and condense the input.
 2. Plan a deck structure.
-3. Generate one HTML/CSS page per slide at `1920x1080`.
-4. Render each HTML slide to a PNG.
-5. Use `python-pptx` to insert each PNG as a full-slide image in a 16:9 PPTX.
+3. Generate native PPT text boxes, cards, backgrounds, and decorations.
+4. Apply Alibaba PuHuiTi font names to all text.
+5. Use `python-pptx` to build a stable 16:9 PPTX.
 6. Run quality checks and report the final path.
+
+For image mode only, generate one HTML/CSS page per slide at `1920x1080`, render each HTML slide to a PNG, then use `python-pptx` to insert each PNG as a full-slide image.
 
 ## Visual Rules
 
@@ -45,10 +47,14 @@ Follow the bundled ICI Lab template style:
 - Avoid dense paragraphs; use concise bullets, keywords, frameworks, comparisons, and process structures.
 - The closing slide must include a summary, contribution, memorable statement, contact/homepage placeholder, or Q&A invitation. It must not be only “谢谢”.
 
-Preferred fonts:
+Required visual font:
+
+- Alibaba PuHuiTi, using bundled OTF files in `fonts/`.
+
+Fallback fonts:
 
 - Chinese: `Noto Sans SC`, `Source Han Sans SC`, `Microsoft YaHei`.
-- English: `Inter`, `Helvetica Neue`, `Arial`.
+- English: `Helvetica Neue`, `Arial`.
 
 ## Page Types
 
@@ -66,11 +72,11 @@ Use these layouts as appropriate:
 
 ## Quality Checks
 
-Before returning the deck, verify PNG existence and size, PPTX existence and size, slide order, and text density.
+Before returning the deck, verify PPTX existence and size, slide order, and text density. In image mode, also verify PNG existence and size.
 
 ## Runtime Dependencies
 
-The bundled runner auto-installs missing `python-pptx`, `playwright`, `Pillow`, and Playwright Chromium into the current Python environment on first use. This makes the skill usable after installation without a separate virtual environment setup.
+The bundled runner auto-installs missing `python-pptx` on first use. Image mode also auto-installs missing `playwright`, `Pillow`, and Playwright Chromium. This makes the skill usable after installation without a separate virtual environment setup.
 
 Use `--no-auto-install` or set `ICI_PPT_AUTO_INSTALL=0` when automatic installation is not allowed. If automatic installation fails because the environment is offline or locked down, tell the user to run:
 
