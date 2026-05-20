@@ -8,7 +8,7 @@ from pathlib import Path
 from dependencies import ensure_dependencies
 from editable_pptx_builder import build_editable_pptx
 from html_renderer import render_html_files, render_pngs
-from planner import infer_title, plan_deck, read_input
+from planner import infer_title, plan_deck, read_input, validate_slide_plan
 from pptx_builder import build_pptx_from_pngs
 from quality import check_outputs
 
@@ -46,12 +46,17 @@ def main() -> None:
     png_dir = workdir / "png"
 
     slides = plan_deck(markdown, title, args.pages)
+    validate_slide_plan(slides)
+    toc_items = slides[1].data.get("items", []) if len(slides) > 1 and slides[1].layout == "toc" else []
+    section_titles = [slide.title for slide in slides if slide.layout == "section"]
     if args.pptx_mode == "editable":
         build_editable_pptx(slides, output_path, title)
         report = {
             "pptx": str(output_path),
             "pptx_mode": "editable",
             "slide_count": len(slides),
+            "toc_items": toc_items,
+            "section_titles": section_titles,
             "pptx_exists": output_path.exists(),
             "pptx_size": output_path.stat().st_size if output_path.exists() else 0,
             "font_family": "Alibaba PuHuiTi",
@@ -63,6 +68,8 @@ def main() -> None:
         png_paths = render_pngs(html_paths, png_dir, slides, renderer=args.renderer)
         build_pptx_from_pngs(png_paths, output_path, title)
         report = check_outputs(png_paths, output_path)
+        report["toc_items"] = toc_items
+        report["section_titles"] = section_titles
 
     report_path = output_path.with_suffix(".quality.json")
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")

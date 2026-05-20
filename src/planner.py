@@ -76,9 +76,36 @@ def _items(lines: list[str], fallback: list[str], limit: int = 4) -> list[str]:
 
 
 def _is_project(markdown: str) -> bool:
-    keywords = ["项目", "prototype", "原型", "用户", "设计", "product", "system"]
     lowered = markdown.lower()
-    return any(k.lower() in lowered for k in keywords)
+    strong_project_keywords = [
+        "项目介绍",
+        "项目背景",
+        "项目目标",
+        "产品",
+        "原型",
+        "用户反馈",
+        "用户研究",
+        "prototype",
+        "product",
+        "roadmap",
+        "mvp",
+    ]
+    academic_keywords = [
+        "论文",
+        "研究",
+        "实验",
+        "方法",
+        "框架",
+        "结果",
+        "讨论",
+        "conclusion",
+        "experiment",
+        "method",
+        "research",
+    ]
+    project_score = sum(1 for keyword in strong_project_keywords if keyword.lower() in lowered)
+    academic_score = sum(1 for keyword in academic_keywords if keyword.lower() in lowered)
+    return project_score > 0 and project_score >= academic_score
 
 
 def _default_topics(markdown: str) -> list[str]:
@@ -106,15 +133,17 @@ def plan_deck(markdown: str, title: str, page_count: int | None = None) -> list[
     requested = page_count or 10
     requested = max(5, min(20, requested))
 
-    body_slots = max(1, requested - 5)
     topics = [s[0] for s in sections] or _default_topics(markdown)
     default_topics = _default_topics(markdown)
-    while len(topics) < body_slots:
+    while len(topics) < 3:
         topics.append(default_topics[len(topics) % len(default_topics)])
-    topics = topics[:body_slots]
 
     section_map = {title_: lines for title_, lines in sections}
-    toc_items = topics[:6]
+    chapter_count = _chapter_count(requested, len(topics))
+    chapter_groups = _group_topics(topics, chapter_count)
+    chapter_titles = _chapter_titles(chapter_groups, markdown)
+    body_slots = max(chapter_count, requested - chapter_count - 4)
+    body_distribution = _distribute_body_slots(chapter_count, body_slots)
 
     slides: list[Slide] = [
         Slide(
@@ -125,26 +154,39 @@ def plan_deck(markdown: str, title: str, page_count: int | None = None) -> list[
                 "meta": "Intelligent Creativity and Interaction Lab · Zhejiang University",
             },
         ),
-        Slide("toc", "Contents", {"items": toc_items}),
-        Slide("section", topics[0], {"section_no": "01", "subtitle": "Context, motivation, and core question"}),
+        Slide("toc", "Contents", {"items": chapter_titles}),
     ]
 
     body_layouts = ["content", "two_column", "process", "image", "content", "two_column"]
-    for idx, topic in enumerate(topics):
-        lines = section_map.get(topic, [])
-        fallback = [
-            f"Clarify the role of {topic} in the overall argument",
-            "Condense evidence into a small set of memorable points",
-            "Connect design decisions with research goals",
-            "Prepare the audience for the next step of the report",
-        ]
-        items = _items(lines, fallback, 5)
-        layout = body_layouts[idx % len(body_layouts)]
-        if idx == 0:
-            layout = "content"
-        if idx == 2:
-            layout = "process"
-        slides.append(_make_body_slide(layout, topic, items, idx + 1))
+    body_index = 0
+    for chapter_idx, (chapter_title, group, slide_count) in enumerate(zip(chapter_titles, chapter_groups, body_distribution), start=1):
+        slides.append(
+            Slide(
+                "section",
+                chapter_title,
+                {
+                    "section_no": f"{chapter_idx:02d}",
+                    "subtitle": " / ".join(group[:3]),
+                },
+            )
+        )
+        for local_idx in range(slide_count):
+            topic = group[local_idx % len(group)]
+            lines = section_map.get(topic, [])
+            fallback = [
+                f"Clarify the role of {topic} in the overall argument",
+                "Condense evidence into a small set of memorable points",
+                "Connect design decisions with research goals",
+                "Prepare the audience for the next step of the report",
+            ]
+            items = _items(lines, fallback, 5)
+            layout = body_layouts[body_index % len(body_layouts)]
+            if body_index == 0:
+                layout = "content"
+            if "方法" in topic or "框架" in topic or body_index == 2:
+                layout = "process"
+            slides.append(_make_body_slide(layout, topic, items, body_index + 1))
+            body_index += 1
 
     slides.append(
         Slide(
@@ -170,6 +212,66 @@ def plan_deck(markdown: str, title: str, page_count: int | None = None) -> list[
         )
     )
     return slides
+
+
+def validate_slide_plan(slides: list[Slide]) -> None:
+    toc_slides = [slide for slide in slides if slide.layout == "toc"]
+    if not toc_slides:
+        raise ValueError("Deck plan is missing a table-of-contents slide.")
+
+    toc_items = [str(item).strip() for item in toc_slides[0].data.get("items", []) if str(item).strip()]
+    section_titles = [slide.title.strip() for slide in slides if slide.layout == "section" and slide.title.strip()]
+    if toc_items != section_titles:
+        raise ValueError(
+            "TOC entries must match section divider titles exactly: "
+            f"toc={toc_items}, sections={section_titles}"
+        )
+
+
+def _chapter_count(requested: int, topic_count: int) -> int:
+    max_by_pages = max(1, (requested - 4) // 2)
+    preferred = 4 if requested >= 12 else 3 if requested >= 10 else 2
+    return max(1, min(preferred, max_by_pages, max(1, topic_count)))
+
+
+def _group_topics(topics: list[str], chapter_count: int) -> list[list[str]]:
+    groups: list[list[str]] = []
+    for idx in range(chapter_count):
+        start = round(idx * len(topics) / chapter_count)
+        end = round((idx + 1) * len(topics) / chapter_count)
+        group = topics[start:end] or [topics[min(idx, len(topics) - 1)]]
+        groups.append(group)
+    return groups
+
+
+def _chapter_titles(groups: list[list[str]], markdown: str) -> list[str]:
+    if all(len(group) == 1 for group in groups):
+        return [group[0] for group in groups]
+
+    if _is_project(markdown):
+        presets = {
+            2: ["项目背景与目标", "设计结果与总结"],
+            3: ["项目背景与目标", "设计过程与系统", "用户反馈与总结"],
+            4: ["项目背景", "设计目标与过程", "系统验证", "结果与展望"],
+        }
+    else:
+        presets = {
+            2: ["研究问题与方法", "结果、讨论与贡献"],
+            3: ["研究背景与问题", "方法设计与框架", "结果、讨论与贡献"],
+            4: ["研究背景与问题", "方法与系统设计", "结果与验证", "讨论与贡献"],
+        }
+    return presets.get(len(groups), [group[0] for group in groups])
+
+
+def _distribute_body_slots(chapter_count: int, body_slots: int) -> list[int]:
+    slots = [1] * chapter_count
+    remaining = max(0, body_slots - chapter_count)
+    idx = 0
+    while remaining:
+        slots[idx % chapter_count] += 1
+        idx += 1
+        remaining -= 1
+    return slots
 
 
 def _make_body_slide(layout: str, topic: str, items: List[str], number: int) -> Slide:

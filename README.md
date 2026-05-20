@@ -10,6 +10,8 @@ Markdown input -> deck plan -> editable PowerPoint text/shapes -> 16:9 PPTX
 
 The previous high-fidelity PNG workflow is still available with `--pptx-mode image`.
 
+The planner keeps the agenda and chapter dividers synchronized: every TOC item is a real section divider title, and body-slide topics sit under those chapters.
+
 ## Structure
 
 ```text

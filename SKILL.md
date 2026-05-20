@@ -44,6 +44,7 @@ Follow the bundled ICI Lab template style:
 - Keep generous whitespace, clean alignment, and academic-report pacing.
 - Use the three-color square motif near the bottom right on most pages.
 - Use numbered sections such as `01 / 02 / 03` on TOC and section dividers.
+- TOC items must exactly match the real section divider titles. Do not list body-slide topics as agenda items unless they also have matching section divider slides.
 - Avoid dense paragraphs; use concise bullets, keywords, frameworks, comparisons, and process structures.
 - The closing slide must include a summary, contribution, memorable statement, contact/homepage placeholder, or Q&A invitation. It must not be only “谢谢”.
 
@@ -72,7 +73,7 @@ Use these layouts as appropriate:
 
 ## Quality Checks
 
-Before returning the deck, verify PPTX existence and size, slide order, and text density. In image mode, also verify PNG existence and size.
+Before returning the deck, verify PPTX existence and size, slide order, text density, and that TOC entries match the section divider titles. In image mode, also verify PNG existence and size.
 
 ## Runtime Dependencies
 

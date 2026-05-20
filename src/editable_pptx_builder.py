@@ -64,12 +64,12 @@ def draw_slide(slide, model: Slide) -> None:
         add_text(slide, model.data.get("subtitle", ""), 120, 548, 1210, 88, 25, "E6F5FF", FONT_REGULAR)
         add_text(slide, model.data.get("meta", ""), 120, 930, 980, 46, 19, "DCEFFF", FONT_REGULAR)
     elif layout == "toc":
-        add_text(slide, "Contents", 120, 176, 640, 92, 48, WHITE, FONT_HEAVY)
+        add_text(slide, "Contents", 120, 160, 640, 82, 44, WHITE, FONT_HEAVY)
         draw_toc(slide, model.data.get("items", []))
     elif layout == "section":
-        add_text(slide, model.data.get("section_no", "01"), 120, 236, 500, 190, 104, WHITE, FONT_HEAVY)
-        add_text(slide, model.title, 120, 456, 1220, 174, 46, WHITE, FONT_HEAVY)
-        add_text(slide, model.data.get("subtitle", ""), 120, 656, 1120, 80, 24, "E1F5FF", FONT_REGULAR)
+        add_text(slide, model.data.get("section_no", "01"), 120, 230, 430, 145, 82, WHITE, FONT_HEAVY)
+        add_text(slide, wrap_text(model.title, 18, 2), 120, 405, 1280, 140, 38, WHITE, FONT_HEAVY, line_spacing=0.95)
+        add_text(slide, wrap_text(model.data.get("subtitle", ""), 36, 2), 120, 592, 1220, 82, 21, "E1F5FF", FONT_REGULAR, line_spacing=1.05)
     elif layout == "closing":
         add_text(slide, model.title, 120, 245, 1370, 180, 50, WHITE, FONT_HEAVY)
         add_text(slide, model.data.get("message", ""), 120, 470, 1180, 180, 26, "E6F5FF", FONT_REGULAR)
@@ -99,10 +99,8 @@ def draw_body(slide, model: Slide) -> None:
             add_process_card(slide, 120 + (idx - 1) * (card_w + gap), 330, card_w, 410, f"{idx:02d}", step)
         add_text(slide, wrap_text(model.data.get("note", ""), 46, 3), 120, 805, 1180, 105, 19, SECONDARY_TEXT, FONT_REGULAR, line_spacing=1.05)
     elif model.layout == "image":
-        add_rect(slide, 120, 302, 1100, 590, "EEF6FF", line=SOFT_LINE)
-        add_text(slide, model.data.get("figure_title", "Figure / Prototype / Result"), 310, 530, 720, 72, 28, DEEP_BLUE, FONT_HEAVY, align="center")
-        add_text(slide, model.data.get("figure_note", ""), 300, 612, 760, 58, 18, SECONDARY_TEXT, FONT_REGULAR, align="center")
-        add_bullets(slide, model.data.get("items", []), 1320, 330, 430, 430, 20)
+        add_figure_placeholder(slide, 120, 310, 1040, 585, model.data.get("figure_title", "Figure / Prototype / Result"), model.data.get("figure_note", ""))
+        add_bullets(slide, model.data.get("items", []), 1260, 330, 520, 430, 19)
     elif model.layout == "summary":
         for idx, card in enumerate(model.data.get("cards", [])[:3]):
             card_title, body = card
@@ -113,13 +111,16 @@ def draw_body(slide, model: Slide) -> None:
 
 
 def draw_toc(slide, items: Iterable[str]) -> None:
-    for idx, item in enumerate(list(items)[:6], start=1):
-        col = 0 if idx <= 3 else 1
-        row = idx - 1 if idx <= 3 else idx - 4
+    toc_items = list(items)[:4]
+    rows = 2 if len(toc_items) <= 4 else 3
+    for idx, item in enumerate(toc_items, start=1):
+        col = 0 if idx <= rows else 1
+        row = idx - 1 if idx <= rows else idx - rows - 1
         x = 120 + col * 860
-        y = 330 + row * 120
-        add_text(slide, f"{idx:02d}", x, y, 90, 62, 30, WHITE, FONT_HEAVY)
-        add_text(slide, str(item), x + 110, y + 6, 620, 80, 25, "EBFAFF", FONT_BOLD)
+        y = 330 + row * 150
+        add_text(slide, f"{idx:02d}", x, y, 86, 52, 27, WHITE, FONT_HEAVY)
+        add_text(slide, wrap_text(str(item), 16, 2), x + 112, y + 2, 610, 74, 22, "EBFAFF", FONT_BOLD, line_spacing=0.98)
+        add_rect(slide, x + 112, y + 92, 240, 3, "EBFAFF", no_line=True)
 
 
 def draw_gradient_background(slide) -> None:
@@ -154,6 +155,15 @@ def add_process_card(slide, x: int, y: int, w: int, h: int, number: str, step: s
     add_text(slide, number, x + 34, y + 38, w - 68, 58, 28, DEEP_BLUE, FONT_HEAVY)
     chars = max(8, int((w - 68) / 34))
     add_text(slide, wrap_text(step, chars, 7), x + 34, y + 128, w - 68, h - 158, 18, DARK_TEXT, FONT_MEDIUM, line_spacing=1.02)
+
+
+def add_figure_placeholder(slide, x: int, y: int, w: int, h: int, title: str, note: str) -> None:
+    add_rect(slide, x, y, w, h, "F1F7FF", line=SOFT_LINE)
+    add_rect(slide, x + 28, y + 28, w - 56, h - 102, "FFFFFF", line=SOFT_LINE)
+    add_text(slide, wrap_text(title, 22, 2), x + 120, y + 235, w - 240, 78, 25, DEEP_BLUE, FONT_HEAVY, align="center", line_spacing=0.95)
+    add_text(slide, wrap_text(note, 36, 2), x + 160, y + 318, w - 320, 58, 16, SECONDARY_TEXT, FONT_REGULAR, align="center", line_spacing=1.05)
+    add_rect(slide, x + 28, y + h - 52, w - 56, 1, SOFT_LINE, no_line=True)
+    add_text(slide, "Figure placeholder", x + 42, y + h - 42, w - 84, 28, 13, "64748B", FONT_REGULAR)
 
 
 def add_bullets(slide, items: Iterable[str], x: int, y: int, w: int, h: int, size: int) -> None:
