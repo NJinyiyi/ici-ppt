@@ -120,24 +120,15 @@ def draw_toc(slide, items: Iterable[str]) -> None:
 
 
 def draw_gradient_background(slide) -> None:
-    steps = 40
-    width = 1920 / steps
-    for idx in range(steps):
-        t = idx / (steps - 1)
-        color = interpolate_gradient(t)
-        add_rect(slide, int(idx * width), 0, int(width + 2), 1080, color, no_line=True)
-
-
-def interpolate_gradient(t: float) -> str:
-    if t < 0.48:
-        return mix(PURPLE_BLUE, MAIN_BLUE, t / 0.48)
-    return mix(MAIN_BLUE, CYAN_GREEN, (t - 0.48) / 0.52)
-
-
-def mix(a: str, b: str, t: float) -> str:
-    av = tuple(int(a[i : i + 2], 16) for i in (0, 2, 4))
-    bv = tuple(int(b[i : i + 2], 16) for i in (0, 2, 4))
-    return "".join(f"{int(av[i] + (bv[i] - av[i]) * t):02X}" for i in range(3))
+    add_gradient_rect(
+        slide,
+        0,
+        0,
+        1920,
+        1080,
+        stops=[(0, PURPLE_BLUE), (48000, MAIN_BLUE), (100000, CYAN_GREEN)],
+        angle=135,
+    )
 
 
 def add_tri_squares(slide, gradient: bool) -> None:
@@ -174,6 +165,48 @@ def add_rect(slide, x: int, y: int, w: int, h: int, fill: str, line: str | None 
     else:
         shape.line.fill.background()
     return shape
+
+
+def add_gradient_rect(slide, x: int, y: int, w: int, h: int, stops: list[tuple[int, str]], angle: int = 135):
+    shape = add_rect(slide, x, y, w, h, stops[0][1], no_line=True)
+    apply_gradient_fill(shape, stops, angle)
+    return shape
+
+
+def apply_gradient_fill(shape, stops: list[tuple[int, str]], angle: int) -> None:
+    from pptx.oxml.xmlchemy import OxmlElement
+    from pptx.oxml.ns import qn
+
+    sp_pr = shape._element.spPr
+    for fill_tag in ("a:solidFill", "a:gradFill", "a:noFill", "a:pattFill", "a:blipFill"):
+        node = sp_pr.find(qn(fill_tag))
+        if node is not None:
+            sp_pr.remove(node)
+
+    grad_fill = OxmlElement("a:gradFill")
+    grad_fill.set("rotWithShape", "1")
+
+    gs_lst = OxmlElement("a:gsLst")
+    for position, color in stops:
+        gs = OxmlElement("a:gs")
+        gs.set("pos", str(position))
+        srgb = OxmlElement("a:srgbClr")
+        srgb.set("val", color)
+        gs.append(srgb)
+        gs_lst.append(gs)
+    grad_fill.append(gs_lst)
+
+    lin = OxmlElement("a:lin")
+    lin.set("ang", str(angle * 60000))
+    lin.set("scaled", "1")
+    grad_fill.append(lin)
+
+    children = list(sp_pr)
+    ln = sp_pr.find(qn("a:ln"))
+    if ln is not None:
+        sp_pr.insert(children.index(ln), grad_fill)
+    else:
+        sp_pr.append(grad_fill)
 
 
 def add_text(
