@@ -81,32 +81,35 @@ def draw_slide(slide, model: Slide) -> None:
 
 
 def draw_content_header(slide, model: Slide) -> None:
-    add_text(slide, model.data.get("kicker", "ICI Lab Report"), 120, 74, 640, 30, 16, MAIN_BLUE, FONT_BOLD)
-    add_text(slide, model.title, 120, 108, 1260, 94, 34, DEEP_BLUE, FONT_HEAVY)
-    add_rect(slide, 120, 198, 150, 6, MAIN_BLUE, no_line=True)
+    add_text(slide, model.data.get("kicker", "ICI Lab Report"), 120, 66, 700, 34, 14, MAIN_BLUE, FONT_BOLD)
+    add_text(slide, model.title, 120, 124, 1260, 88, 30, DEEP_BLUE, FONT_HEAVY)
+    add_rect(slide, 120, 224, 150, 6, MAIN_BLUE, no_line=True)
 
 
 def draw_body(slide, model: Slide) -> None:
     if model.layout == "two_column":
-        add_card(slide, 120, 290, 790, 560, model.data.get("left_title", "Challenge"), model.data.get("left_items", []))
-        add_card(slide, 1010, 290, 790, 560, model.data.get("right_title", "Response"), model.data.get("right_items", []), accent=CYAN_GREEN)
+        add_card(slide, 120, 310, 790, 540, model.data.get("left_title", "Challenge"), model.data.get("left_items", []))
+        add_card(slide, 1010, 310, 790, 540, model.data.get("right_title", "Response"), model.data.get("right_items", []), accent=CYAN_GREEN)
     elif model.layout == "process":
         steps = model.data.get("steps", [])[:4]
+        count = max(1, len(steps))
+        gap = 42 if count <= 3 else 26
+        card_w = int((1680 - gap * (count - 1)) / count)
         for idx, step in enumerate(steps, start=1):
-            add_card(slide, 120 + (idx - 1) * 425, 336, 390, 300, f"{idx:02d}", [step], accent=MAIN_BLUE)
-        add_text(slide, model.data.get("note", ""), 120, 790, 1180, 90, 22, SECONDARY_TEXT, FONT_REGULAR)
+            add_process_card(slide, 120 + (idx - 1) * (card_w + gap), 330, card_w, 410, f"{idx:02d}", step)
+        add_text(slide, wrap_text(model.data.get("note", ""), 46, 3), 120, 805, 1180, 105, 19, SECONDARY_TEXT, FONT_REGULAR, line_spacing=1.05)
     elif model.layout == "image":
-        add_rect(slide, 120, 282, 1100, 610, "EEF6FF", line=SOFT_LINE)
-        add_text(slide, model.data.get("figure_title", "Figure / Prototype / Result"), 310, 518, 720, 72, 30, DEEP_BLUE, FONT_HEAVY, align="center")
-        add_text(slide, model.data.get("figure_note", ""), 300, 604, 760, 58, 19, SECONDARY_TEXT, FONT_REGULAR, align="center")
-        add_bullets(slide, model.data.get("items", []), 1320, 330, 430, 430, 22)
+        add_rect(slide, 120, 302, 1100, 590, "EEF6FF", line=SOFT_LINE)
+        add_text(slide, model.data.get("figure_title", "Figure / Prototype / Result"), 310, 530, 720, 72, 28, DEEP_BLUE, FONT_HEAVY, align="center")
+        add_text(slide, model.data.get("figure_note", ""), 300, 612, 760, 58, 18, SECONDARY_TEXT, FONT_REGULAR, align="center")
+        add_bullets(slide, model.data.get("items", []), 1320, 330, 430, 430, 20)
     elif model.layout == "summary":
         for idx, card in enumerate(model.data.get("cards", [])[:3]):
             card_title, body = card
-            add_card(slide, 120 + idx * 570, 298, 530, 438, card_title, [body], accent=CYAN_GREEN)
+            add_card(slide, 120 + idx * 570, 318, 530, 418, card_title, [body], accent=CYAN_GREEN)
     else:
-        add_bullets(slide, model.data.get("items", []), 120, 280, 1180, 520, 23)
-        add_card(slide, 1420, 280, 380, 420, "Key Point", [model.data.get("highlight", model.title)], accent=MAIN_BLUE)
+        add_bullets(slide, model.data.get("items", []), 120, 300, 1180, 500, 21)
+        add_card(slide, 1420, 300, 380, 400, "Key Point", [model.data.get("highlight", model.title)], accent=MAIN_BLUE)
 
 
 def draw_toc(slide, items: Iterable[str]) -> None:
@@ -141,13 +144,59 @@ def add_card(slide, x: int, y: int, w: int, h: int, title: str, items: Iterable[
     add_rect(slide, x, y, w, h, WHITE, line=SOFT_LINE)
     if accent:
         add_rect(slide, x, y, w, 8, accent, no_line=True)
-    add_text(slide, str(title), x + 34, y + 34, w - 68, 70, 26, DEEP_BLUE, FONT_HEAVY)
-    add_bullets(slide, list(items)[:4], x + 34, y + 132, w - 68, h - 160, 21)
+    add_text(slide, wrap_text(str(title), max(8, int((w - 68) / 34)), 2), x + 34, y + 34, w - 68, 70, 24, DEEP_BLUE, FONT_HEAVY)
+    add_bullets(slide, list(items)[:4], x + 34, y + 132, w - 68, h - 160, 18)
+
+
+def add_process_card(slide, x: int, y: int, w: int, h: int, number: str, step: str) -> None:
+    add_rect(slide, x, y, w, h, WHITE, line=SOFT_LINE)
+    add_rect(slide, x, y, w, 8, MAIN_BLUE, no_line=True)
+    add_text(slide, number, x + 34, y + 38, w - 68, 58, 28, DEEP_BLUE, FONT_HEAVY)
+    chars = max(8, int((w - 68) / 34))
+    add_text(slide, wrap_text(step, chars, 7), x + 34, y + 128, w - 68, h - 158, 18, DARK_TEXT, FONT_MEDIUM, line_spacing=1.02)
 
 
 def add_bullets(slide, items: Iterable[str], x: int, y: int, w: int, h: int, size: int) -> None:
-    text = "\n".join(f"• {item}" for item in list(items)[:5])
+    item_list = list(items)
+    chars = max(8, int(w / (size * 1.75)))
+    wrapped_items = []
+    max_items = min(5, len(item_list))
+    max_lines = max(1, int(h / (size * 2.0)) // max(1, max_items))
+    for item in item_list[:5]:
+        lines = wrap_text(str(item), chars, max_lines).splitlines()
+        if not lines:
+            continue
+        wrapped_items.append("• " + lines[0])
+        wrapped_items.extend("  " + line for line in lines[1:])
+    text = "\n".join(wrapped_items)
     add_text(slide, text, x, y, w, h, size, DARK_TEXT, FONT_REGULAR, line_spacing=1.18)
+
+
+def wrap_text(text: str, max_chars: int, max_lines: int) -> str:
+    text = " ".join(str(text).split())
+    if not text:
+        return ""
+    lines: list[str] = []
+    current = ""
+    current_width = 0.0
+    for char in text:
+        width = 0.55 if char.isascii() and char not in "，。；：、！？（）" else 1.0
+        if current and current_width + width > max_chars:
+            lines.append(current.rstrip())
+            current = char
+            current_width = width
+            if len(lines) >= max_lines:
+                break
+        else:
+            current += char
+            current_width += width
+    if len(lines) < max_lines and current:
+        lines.append(current.rstrip())
+    if len(lines) > max_lines:
+        lines = lines[:max_lines]
+    if len(lines) == max_lines and len("".join(lines)) < len(text):
+        lines[-1] = lines[-1].rstrip("，。；：、,. ") + "…"
+    return "\n".join(lines)
 
 
 def add_rect(slide, x: int, y: int, w: int, h: int, fill: str, line: str | None = None, no_line: bool = False):
