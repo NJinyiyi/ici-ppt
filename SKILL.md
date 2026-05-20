@@ -1,11 +1,11 @@
 ---
 name: ici-ppt
-description: Generate ICI Lab style PowerPoint presentations from a topic, paper, report, outline, or raw notes. Use this skill when the user asks for an ICI Lab / Intelligent Creativity and Interaction Lab / Zhejiang University academic PPTX deck, especially when the output must be a .pptx built from HTML/CSS rendered slides.
+description: Generate editable ICI Lab style PowerPoint presentations from a topic, paper, report, outline, or raw notes. Use this skill when the user asks for an ICI Lab / Intelligent Creativity and Interaction Lab / Zhejiang University academic PPTX deck, especially when the output must be a .pptx with editable text and shapes.
 ---
 
 # ici-ppt
 
-Use this skill to create ICI Lab style `.pptx` files from user-provided themes, papers, reports, outlines, or notes.
+Use this skill to create editable ICI Lab style `.pptx` files from user-provided themes, papers, reports, outlines, or notes.
 
 ## Inputs
 
@@ -21,13 +21,13 @@ If important information is missing, make reasonable academic defaults and keep 
 
 ## Output
 
-Always produce a `.pptx` file. The standard pipeline is:
+Always produce a `.pptx` file. Default output uses editable PowerPoint text boxes and shapes. The standard pipeline is:
 
 1. Understand and condense the input.
 2. Plan a deck structure.
-3. Generate one HTML/CSS page per slide at `1920x1080`.
-4. Render each HTML slide to a PNG.
-5. Insert each PNG as a full-slide image in a 16:9 PPTX.
+3. Generate native PowerPoint text boxes, cards, backgrounds, and decorations.
+4. Build a 16:9 PPTX with editable objects.
+5. Optionally use `--pptx-mode image` to render HTML/CSS slides to `1920x1080` PNGs and insert them as full-slide images when visual fidelity matters more than editability.
 6. Run quality checks and report the final path.
 
 ## Visual Rules
@@ -66,11 +66,11 @@ Use these layouts as appropriate:
 
 ## Quality Checks
 
-Before returning the deck, verify PNG existence and size, PPTX existence and size, slide order, and text density.
+Before returning the deck, verify PPTX existence and size, slide order, and text density. In image mode, also verify PNG existence and size.
 
 ## Runtime Dependencies
 
-The bundled runner auto-installs missing `playwright`, `Pillow`, and Playwright Chromium into the current Python environment on first use. This makes the skill usable after installation without a separate virtual environment setup.
+The default editable PPTX mode has no external package dependency. Image mode auto-installs missing `playwright`, `Pillow`, and Playwright Chromium into the current Python environment on first use.
 
 Use `--no-auto-install` or set `ICI_PPT_AUTO_INSTALL=0` when automatic installation is not allowed. If automatic installation fails because the environment is offline or locked down, tell the user to run:
 

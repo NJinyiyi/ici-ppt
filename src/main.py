@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 from dependencies import ensure_dependencies
+from editable_pptx_builder import build_editable_pptx
 from html_renderer import render_html_files, render_pngs
 from planner import infer_title, plan_deck, read_input
 from pptx_builder import build_pptx_from_pngs
@@ -25,10 +26,12 @@ def main() -> None:
     parser.add_argument("--pages", type=int, default=10, help="Target slide count, default 10.")
     parser.add_argument("--workdir", default="output/build", help="Intermediate HTML/PNG directory.")
     parser.add_argument("--renderer", choices=["auto", "browser", "pil"], default="auto", help="PNG renderer. Use pil only as a constrained-environment fallback.")
+    parser.add_argument("--pptx-mode", choices=["editable", "image"], default="editable", help="editable creates native PowerPoint text/shapes; image uses full-slide PNG backgrounds.")
     parser.add_argument("--no-auto-install", action="store_true", help="Disable automatic dependency installation.")
     args = parser.parse_args()
 
-    ensure_dependencies(renderer=args.renderer, auto_install=not args.no_auto_install)
+    if args.pptx_mode == "image":
+        ensure_dependencies(renderer=args.renderer, auto_install=not args.no_auto_install)
 
     project_dir = Path(__file__).resolve().parents[1]
     markdown = read_input(args.input)
@@ -44,10 +47,23 @@ def main() -> None:
     png_dir = workdir / "png"
 
     slides = plan_deck(markdown, title, args.pages)
-    html_paths = render_html_files(slides, project_dir, html_dir)
-    png_paths = render_pngs(html_paths, png_dir, slides, renderer=args.renderer)
-    build_pptx_from_pngs(png_paths, output_path, title)
-    report = check_outputs(png_paths, output_path)
+    if args.pptx_mode == "image":
+        html_paths = render_html_files(slides, project_dir, html_dir)
+        png_paths = render_pngs(html_paths, png_dir, slides, renderer=args.renderer)
+        build_pptx_from_pngs(png_paths, output_path, title)
+        report = check_outputs(png_paths, output_path)
+    else:
+        build_editable_pptx(slides, output_path, title)
+        report = {
+            "pptx": str(output_path),
+            "pptx_mode": "editable",
+            "slide_count": len(slides),
+            "pptx_exists": output_path.exists(),
+            "pptx_size": output_path.stat().st_size if output_path.exists() else 0,
+            "editable_objects": "native PowerPoint text boxes and shapes",
+        }
+        if not report["pptx_exists"] or report["pptx_size"] < 20_000:
+            raise RuntimeError(f"Editable PPTX quality check failed: {output_path}")
 
     report_path = output_path.with_suffix(".quality.json")
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
