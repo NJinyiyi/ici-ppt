@@ -27,7 +27,7 @@ Always produce a `.pptx` file. The standard pipeline is:
 2. Plan a deck structure.
 3. Generate one HTML/CSS page per slide at `1920x1080`.
 4. Render each HTML slide to a PNG.
-5. Insert each PNG as a full-slide image in a 16:9 PPTX.
+5. Use `python-pptx` to insert each PNG as a full-slide image in a 16:9 PPTX.
 6. Run quality checks and report the final path.
 
 ## Visual Rules
@@ -70,11 +70,11 @@ Before returning the deck, verify PNG existence and size, PPTX existence and siz
 
 ## Runtime Dependencies
 
-The bundled runner auto-installs missing `playwright`, `Pillow`, and Playwright Chromium into the current Python environment on first use. This makes the skill usable after installation without a separate virtual environment setup.
+The bundled runner auto-installs missing `python-pptx`, `playwright`, `Pillow`, and Playwright Chromium into the current Python environment on first use. This makes the skill usable after installation without a separate virtual environment setup.
 
 Use `--no-auto-install` or set `ICI_PPT_AUTO_INSTALL=0` when automatic installation is not allowed. If automatic installation fails because the environment is offline or locked down, tell the user to run:
 
 ```bash
-python3 -m pip install --user playwright Pillow
+python3 -m pip install --user python-pptx playwright Pillow
 python3 -m playwright install chromium
 ```

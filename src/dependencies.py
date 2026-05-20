@@ -11,7 +11,7 @@ def ensure_dependencies(renderer: str = "auto", auto_install: bool = True) -> No
     if os.environ.get("ICI_PPT_AUTO_INSTALL", "").lower() in {"0", "false", "no"}:
         auto_install = False
 
-    required_packages = {"PIL": "Pillow"}
+    required_packages = {"PIL": "Pillow", "pptx": "python-pptx"}
     if renderer != "pil":
         required_packages["playwright"] = "playwright"
 

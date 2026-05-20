@@ -52,17 +52,17 @@ cd ici-ppt
 python3 src/main.py --input examples/example_input.md --output output/demo.pptx --title "AI Generated Creativity Never Ends"
 ```
 
-On first run, the script checks for `playwright`, `Pillow`, and Playwright Chromium. If something is missing, it runs:
+On first run, the script checks for `python-pptx`, `Pillow`, `playwright`, and Playwright Chromium. If something is missing, it runs:
 
 ```bash
-python3 -m pip install --user playwright Pillow
+python3 -m pip install --user python-pptx Pillow playwright
 python3 -m playwright install chromium
 ```
 
 To install manually instead:
 
 ```bash
-python3 -m pip install --user playwright Pillow
+python3 -m pip install --user python-pptx Pillow playwright
 python3 -m playwright install chromium
 ```
 
@@ -115,11 +115,12 @@ The first level-1 heading is used as the title when `--title` is not provided. L
 
 ## Output
 
-The generated `.pptx` is 16:9 widescreen. Every slide is a full-page `1920x1080` PNG rendered from HTML/CSS, so the deck preserves visual fidelity across PowerPoint installations.
+The generated `.pptx` is 16:9 widescreen. Every slide is a full-page `1920x1080` PNG rendered from HTML/CSS, and `python-pptx` assembles the final deck to avoid fragile hand-written OOXML.
 
 ## Common Issues
 
 - `No renderer available`: install Playwright and Chromium, or install Google Chrome/Chromium locally.
+- `PowerPoint asks to repair the file`: make sure this version is using `python-pptx`; run `python3 -m pip install --user python-pptx` and regenerate the deck.
 - `PNG size mismatch`: rerun with Playwright; some Chrome CLI installations ignore `--window-size` under unusual display settings.
 - `PPTX too small`: inspect `output/rendered` and verify the slide PNGs were generated.
 
