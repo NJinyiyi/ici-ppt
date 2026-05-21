@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from pathlib import Path
+from urllib.parse import unquote, urlparse
 from typing import Any
 
 from editable_pptx_builder import (
@@ -45,15 +46,15 @@ def build_hybrid_pptx(layouts: list[dict[str, Any]], output_path: Path, title: s
     blank = prs.slide_layouts[6]
     for layout in layouts:
         slide = prs.slides.add_slide(blank)
-        draw_background(slide, layout)
+        is_gradient = draw_background(slide, layout)
         for item in layout.get("items", []):
-            draw_item(slide, item)
+            draw_item(slide, item, is_gradient=is_gradient)
 
     prs.save(output_path)
     return output_path
 
 
-def draw_background(slide, layout: dict[str, Any]) -> None:
+def draw_background(slide, layout: dict[str, Any]) -> bool:
     classes = set(layout.get("slide", {}).get("classes", []))
     if "gradient" in classes:
         add_gradient_rect(
@@ -65,15 +66,19 @@ def draw_background(slide, layout: dict[str, Any]) -> None:
             stops=[(0, PURPLE_BLUE), (48000, MAIN_BLUE), (100000, CYAN_GREEN)],
             angle=135,
         )
+        return True
     else:
         add_rect(slide, 0, 0, 1920, 1080, LIGHT_BG, no_line=True)
+        return False
 
 
-def draw_item(slide, item: dict[str, Any]) -> None:
+def draw_item(slide, item: dict[str, Any], is_gradient: bool = False) -> None:
     kind = item.get("type")
     role = item.get("role", "")
     if kind in {"text", "bullet"}:
-        add_dom_text(slide, item, bullet=kind == "bullet")
+        add_dom_text(slide, item, bullet=kind == "bullet", is_gradient=is_gradient)
+    elif kind == "image":
+        add_dom_image(slide, item)
     elif kind == "card":
         add_dom_card(slide, item)
     elif kind == "rect":
@@ -99,7 +104,7 @@ def add_dom_card(slide, item: dict[str, Any]) -> None:
         add_rect(slide, box["x"], box["y"], box["w"], border_top, accent, no_line=True)
 
 
-def add_dom_text(slide, item: dict[str, Any], bullet: bool = False):
+def add_dom_text(slide, item: dict[str, Any], bullet: bool = False, is_gradient: bool = False):
     from pptx.dml.color import RGBColor
     from pptx.enum.text import MSO_AUTO_SIZE, PP_ALIGN
     from pptx.util import Pt
@@ -133,11 +138,23 @@ def add_dom_text(slide, item: dict[str, Any], bullet: bool = False):
     font = font_for(float(style.get("fontWeight") or 400))
     run.font.name = font
     run.font.size = Pt(max(8, min(86, float(style.get("fontSize") or 22))))
-    run.font.color.rgb = RGBColor.from_string(style.get("color") or default_text_color(role))
+    color = style.get("color") or default_text_color(role)
+    if is_gradient and is_dark_color(color):
+        color = gradient_text_color(role)
+    run.font.color.rgb = RGBColor.from_string(color)
     if font in {FONT_BOLD, FONT_HEAVY}:
         run.font.bold = True
     set_east_asian_font(run, font)
     return tb
+
+
+def add_dom_image(slide, item: dict[str, Any]) -> None:
+    src = item.get("src", "")
+    path = path_from_file_url(src)
+    if not path or not path.exists():
+        return
+    box = item["box"]
+    slide.shapes.add_picture(str(path), px(box["x"]), px(box["y"]), width=px(box["w"]), height=px(box["h"]))
 
 
 def add_rect_from_item(slide, item: dict[str, Any], fill: str, line: str | None = None, no_line: bool = False):
@@ -170,6 +187,35 @@ def font_for(weight: float) -> str:
     if weight >= 600:
         return FONT_MEDIUM
     return FONT_REGULAR
+
+
+def path_from_file_url(src: str) -> Path | None:
+    if not src:
+        return None
+    parsed = urlparse(src)
+    if parsed.scheme == "file":
+        return Path(unquote(parsed.path))
+    if parsed.scheme == "":
+        return Path(src)
+    return None
+
+
+def is_dark_color(color: str | None) -> bool:
+    if not color or len(color) != 6:
+        return True
+    try:
+        r = int(color[0:2], 16)
+        g = int(color[2:4], 16)
+        b = int(color[4:6], 16)
+    except ValueError:
+        return True
+    return (0.2126 * r + 0.7152 * g + 0.0722 * b) < 110
+
+
+def gradient_text_color(role: str) -> str:
+    if role in {"cover-subtitle", "cover-meta", "section-subtitle", "closing-message", "closing-contact"}:
+        return "E6F5FF"
+    return WHITE
 
 
 def role_fill(role: str) -> str:

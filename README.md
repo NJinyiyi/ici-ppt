@@ -10,6 +10,8 @@ Markdown input -> deck plan -> HTML/CSS slides -> PNG preview -> DOM layout extr
 
 This default `hybrid` mode uses HTML/CSS as the visual source of truth, renders PNGs for visual checking, then rebuilds the slide as editable PowerPoint objects. The older native preset workflow is still available with `--pptx-mode editable`; the full-slide PNG workflow is available with `--pptx-mode image`.
 
+For paper-based decks, pass the original PDF with `--source-pdf` to extract likely large figures and automatically replace image placeholders.
+
 The planner keeps the agenda and chapter dividers synchronized: every TOC item is a real section divider title, and body-slide topics sit under those chapters.
 
 ## Structure
@@ -64,17 +66,17 @@ cd ici-ppt
 python3 src/main.py --input examples/example_input.md --output output/demo.pptx --title "AI Generated Creativity Never Ends"
 ```
 
-On first run, the default hybrid mode checks for `python-pptx`, `Pillow`, `playwright`, and Playwright Chromium. If something is missing, it runs:
+On first run, the default hybrid mode checks for `python-pptx`, `Pillow`, `playwright`, and Playwright Chromium. `--source-pdf` also checks for `pypdf`. If something is missing, it runs:
 
 ```bash
-python3 -m pip install --user python-pptx Pillow playwright
+python3 -m pip install --user python-pptx Pillow playwright pypdf
 python3 -m playwright install chromium
 ```
 
 To install manually instead:
 
 ```bash
-python3 -m pip install --user python-pptx Pillow playwright
+python3 -m pip install --user python-pptx Pillow playwright pypdf
 python3 -m playwright install chromium
 ```
 
@@ -91,6 +93,12 @@ If browser rendering is unavailable in a restricted environment, use `--pptx-mod
 ```bash
 cd ici-ppt
 python src/main.py --input examples/example_input.md --output output/demo.pptx --title "AI Generated Creativity Never Ends"
+```
+
+Use a source paper PDF for automatic figure replacement:
+
+```bash
+python src/main.py --input examples/example_input.md --source-pdf paper.pdf --output output/demo.pptx --title "AI Generated Creativity Never Ends"
 ```
 
 To use the high-fidelity rendered-image workflow:
@@ -138,6 +146,8 @@ The first level-1 heading is used as the title when `--title` is not provided. L
 ## Output
 
 The generated `.pptx` is 16:9 widescreen. Default output uses HTML/CSS-derived coordinates to create editable PowerPoint text boxes and native shapes with Alibaba PuHuiTi font names applied. Image mode renders each slide as a full-page `1920x1080` PNG and uses `python-pptx` to assemble the final deck.
+
+Gradient slides force white/pale-blue text in hybrid output, and content-page top labels are vertically separated to avoid the lab mark and kicker folding into each other.
 
 PowerPoint does not automatically install or embed fonts from the Skill folder. To see the editable deck exactly as designed on another machine, install the bundled Alibaba PuHuiTi OTF files from `fonts/`.
 

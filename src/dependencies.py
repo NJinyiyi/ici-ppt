@@ -7,12 +7,14 @@ import subprocess
 import sys
 
 
-def ensure_dependencies(renderer: str = "auto", pptx_mode: str = "image", auto_install: bool = True) -> None:
+def ensure_dependencies(renderer: str = "auto", pptx_mode: str = "image", auto_install: bool = True, source_pdf: bool = False) -> None:
     """Install runtime dependencies into the current Python environment when missing."""
     if os.environ.get("ICI_PPT_AUTO_INSTALL", "").lower() in {"0", "false", "no"}:
         auto_install = False
 
     required_packages = {"pptx": "python-pptx"}
+    if source_pdf:
+        required_packages["pypdf"] = "pypdf"
     if pptx_mode in {"image", "hybrid"}:
         required_packages["PIL"] = "Pillow"
     if pptx_mode in {"image", "hybrid"} and renderer != "pil":

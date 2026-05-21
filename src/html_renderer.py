@@ -77,6 +77,8 @@ def fill_template(template: str, slide: Slide) -> str:
         data["steps"] = process_html(steps)
     if slide.layout == "summary":
         data["summary_cards"] = summary_cards_html(data.get("cards", []))
+    if slide.layout == "image":
+        data["figure_html"] = figure_html(data)
 
     def replace(match: re.Match[str]) -> str:
         key = match.group(1).strip()
@@ -123,6 +125,26 @@ def summary_cards_html(cards: Iterable[tuple[str, str]]) -> str:
             "</div>"
         )
     return "".join(html_cards)
+
+
+def figure_html(data: dict) -> str:
+    figure_path = str(data.get("figure_path", "")).strip()
+    if figure_path:
+        src = Path(figure_path).resolve().as_uri()
+        caption = html.escape(str(data.get("figure_caption") or data.get("figure_note") or "Paper figure"))
+        return (
+            f"<img data-ppt='image' data-ppt-role='paper-figure' src='{src}' "
+            "style='max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;display:block;' />"
+            f"<div data-ppt='text' data-ppt-role='figure-caption' "
+            "style='position:absolute;left:34px;bottom:26px;width:1032px;font-size:20px;line-height:1.25;color:#64748B;'>"
+            f"{caption}</div>"
+        )
+    return (
+        "<div style='text-align:center;color:#64748B;'>"
+        f"<div data-ppt='text' data-ppt-role='figure-title' style='font-size:42px;font-weight:800;color:var(--ici-deep-blue);'>{html.escape(str(data.get('figure_title', 'Figure / Prototype / Result')))}</div>"
+        f"<div data-ppt='text' data-ppt-role='figure-note' style='font-size:28px;margin-top:22px;'>{html.escape(str(data.get('figure_note', 'Replace this placeholder with a diagram, experiment image, or system screenshot.')))}</div>"
+        "</div>"
+    )
 
 
 def render_pngs(html_paths: list[Path], png_dir: Path, slides: list[Slide] | None = None, renderer: str = "auto") -> list[Path]:

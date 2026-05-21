@@ -69,6 +69,7 @@ EXTRACT_SCRIPT = """
       type: pptType,
       role: el.dataset.pptRole || '',
       text: (el.innerText || '').replace(/\\s+\\n/g, '\\n').trim(),
+      src: el.currentSrc || el.src || '',
       box,
       style: {
         color: colorToHex(style.color),

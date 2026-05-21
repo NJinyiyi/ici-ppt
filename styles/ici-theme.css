@@ -74,7 +74,7 @@ body {
 .lab-mark {
   position: absolute;
   left: 120px;
-  top: 72px;
+  top: 56px;
   font-size: 24px;
   font-weight: 700;
   letter-spacing: 0;
@@ -154,7 +154,7 @@ body {
 .content-title {
   position: absolute;
   left: 120px;
-  top: 110px;
+  top: 132px;
   width: 1260px;
   font-size: 52px;
   line-height: 1.16;
@@ -166,7 +166,7 @@ body {
 .content-kicker {
   position: absolute;
   left: 120px;
-  top: 74px;
+  top: 96px;
   font-size: 22px;
   color: var(--ici-main-blue);
   font-weight: 700;
@@ -175,7 +175,7 @@ body {
 .rule {
   position: absolute;
   left: 120px;
-  top: 198px;
+  top: 232px;
   width: 150px;
   height: 6px;
   background: linear-gradient(90deg, var(--ici-main-blue), var(--ici-cyan-green));

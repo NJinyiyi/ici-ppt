@@ -10,6 +10,7 @@ from dom_extractor import extract_layouts
 from editable_pptx_builder import build_editable_pptx
 from hybrid_pptx_builder import build_hybrid_pptx
 from html_renderer import render_html_files, render_pngs
+from pdf_assets import attach_figures_to_slides, extract_pdf_figures
 from planner import infer_title, plan_deck, read_input, validate_slide_plan
 from pptx_builder import build_pptx_from_pngs
 from quality import check_outputs
@@ -23,6 +24,7 @@ def safe_name(title: str) -> str:
 def main() -> None:
     parser = argparse.ArgumentParser(description="Generate an ICI Lab style PPTX from Markdown input.")
     parser.add_argument("--input", required=True, help="Markdown input file.")
+    parser.add_argument("--source-pdf", help="Optional source paper PDF. When supplied, likely figures are extracted and used on image slides.")
     parser.add_argument("--output", help="Output PPTX path.")
     parser.add_argument("--title", help="Deck title.")
     parser.add_argument("--pages", type=int, default=10, help="Target slide count, default 10.")
@@ -37,7 +39,7 @@ def main() -> None:
     parser.add_argument("--no-auto-install", action="store_true", help="Disable automatic dependency installation.")
     args = parser.parse_args()
 
-    ensure_dependencies(renderer=args.renderer, pptx_mode=args.pptx_mode, auto_install=not args.no_auto_install)
+    ensure_dependencies(renderer=args.renderer, pptx_mode=args.pptx_mode, auto_install=not args.no_auto_install, source_pdf=bool(args.source_pdf))
 
     project_dir = Path(__file__).resolve().parents[1]
     markdown = read_input(args.input)
@@ -51,8 +53,14 @@ def main() -> None:
         workdir = project_dir / workdir
     html_dir = workdir / "html"
     png_dir = workdir / "png"
+    figure_dir = workdir / "figures"
 
     slides = plan_deck(markdown, title, args.pages)
+    extracted_figures = []
+    attached_figures = 0
+    if args.source_pdf:
+        extracted_figures = extract_pdf_figures(args.source_pdf, figure_dir)
+        attached_figures = attach_figures_to_slides(slides, extracted_figures)
     validate_slide_plan(slides)
     toc_items = slides[1].data.get("items", []) if len(slides) > 1 and slides[1].layout == "toc" else []
     section_titles = [slide.title for slide in slides if slide.layout == "section"]
@@ -72,6 +80,8 @@ def main() -> None:
             "section_titles": section_titles,
             "png_count": len(png_paths),
             "dom_item_count": sum(len(layout.get("items", [])) for layout in html_layouts),
+            "extracted_figures": len(extracted_figures),
+            "attached_figures": attached_figures,
             "pptx_exists": output_path.exists(),
             "pptx_size": output_path.stat().st_size if output_path.exists() else 0,
             "font_family": "Alibaba PuHuiTi",
@@ -89,6 +99,8 @@ def main() -> None:
             "pptx_exists": output_path.exists(),
             "pptx_size": output_path.stat().st_size if output_path.exists() else 0,
             "font_family": "Alibaba PuHuiTi",
+            "extracted_figures": len(extracted_figures),
+            "attached_figures": attached_figures,
         }
         if not report["pptx_exists"] or report["pptx_size"] < 20_000:
             raise RuntimeError(f"Editable PPTX quality check failed: {output_path}")
@@ -99,6 +111,8 @@ def main() -> None:
         report = check_outputs(png_paths, output_path)
         report["toc_items"] = toc_items
         report["section_titles"] = section_titles
+        report["extracted_figures"] = len(extracted_figures)
+        report["attached_figures"] = attached_figures
 
     report_path = output_path.with_suffix(".quality.json")
     report_path.write_text(json.dumps(report, ensure_ascii=False, indent=2), encoding="utf-8")
