@@ -23,13 +23,16 @@ If important information is missing, make reasonable academic defaults and keep 
 
 Always produce a `.pptx` file. Default output uses the hybrid workflow: HTML/CSS defines each slide, Playwright renders PNG previews and extracts DOM layout, then `python-pptx` rebuilds the slide as editable PowerPoint text boxes and native shapes. The optional `--pptx-mode image` output preserves the full-slide PNG workflow; `--pptx-mode editable` uses the older native preset layout builder without HTML/DOM extraction.
 
+Hybrid and image modes also export the intermediate HTML previews next to the PPTX by default, in `<output_stem>_html_preview/`, with an `index.html` slide browser. Use `--html-preview-dir` to choose a different preview directory.
+
 1. Understand and condense the input.
 2. Plan a deck structure.
 3. Generate one HTML/CSS page per slide at `1920x1080`.
 4. Render PNG previews and extract marked DOM element boxes, typography, and colors.
 5. Use `python-pptx` to rebuild editable text boxes, cards, backgrounds, and decorations.
 6. Apply Alibaba PuHuiTi font names to all text.
-7. Run quality checks and report the final path.
+7. Export the HTML preview directory and `index.html`.
+8. Run quality checks and report the final PPTX and HTML preview paths.
 
 When the source is an academic paper PDF, pass it with `--source-pdf`. The runner extracts likely large figures from the PDF, filters out tiny logos, and uses those figures to replace image-slide placeholders while keeping the rest of the deck editable.
 
@@ -77,7 +80,7 @@ Use these layouts as appropriate:
 
 ## Quality Checks
 
-Before returning the deck, verify PPTX existence and size, slide order, text density, no overlapping top-left lab/kicker text, no black text on gradient slides, and that TOC entries match the section divider titles. In hybrid and image modes, also verify PNG existence and size.
+Before returning the deck, verify PPTX existence and size, slide order, text density, no overlapping top-left lab/kicker text, no black text on gradient slides, and that TOC entries match the section divider titles. In hybrid and image modes, also verify PNG existence and size and include the exported HTML preview path in the quality report.
 
 ## Runtime Dependencies
 

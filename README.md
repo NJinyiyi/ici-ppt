@@ -10,6 +10,8 @@ Markdown input -> deck plan -> HTML/CSS slides -> PNG preview -> DOM layout extr
 
 This default `hybrid` mode uses HTML/CSS as the visual source of truth, renders PNGs for visual checking, then rebuilds the slide as editable PowerPoint objects. The older native preset workflow is still available with `--pptx-mode editable`; the full-slide PNG workflow is available with `--pptx-mode image`.
 
+Hybrid and image modes also export the intermediate HTML previews by default. For `output/demo.pptx`, the preview folder is `output/demo_html_preview/`, with `index.html` for browsing slides.
+
 For paper-based decks, pass the original PDF with `--source-pdf` to extract likely large figures and automatically replace image placeholders.
 
 The planner keeps the agenda and chapter dividers synchronized: every TOC item is a real section divider title, and body-slide topics sit under those chapters.
@@ -95,6 +97,12 @@ cd ici-ppt
 python src/main.py --input examples/example_input.md --output output/demo.pptx --title "AI Generated Creativity Never Ends"
 ```
 
+Choose a custom HTML preview directory:
+
+```bash
+python src/main.py --input examples/example_input.md --output output/demo.pptx --html-preview-dir output/demo_html
+```
+
 Use a source paper PDF for automatic figure replacement:
 
 ```bash
@@ -146,6 +154,8 @@ The first level-1 heading is used as the title when `--title` is not provided. L
 ## Output
 
 The generated `.pptx` is 16:9 widescreen. Default output uses HTML/CSS-derived coordinates to create editable PowerPoint text boxes and native shapes with Alibaba PuHuiTi font names applied. Image mode renders each slide as a full-page `1920x1080` PNG and uses `python-pptx` to assemble the final deck.
+
+The quality report includes `html_preview_dir`, `html_preview_index`, and `html_preview_count` for hybrid and image modes.
 
 Gradient slides force white/pale-blue text in hybrid output, and content-page top labels are vertically separated to avoid the lab mark and kicker folding into each other.
 
