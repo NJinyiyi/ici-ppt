@@ -1,15 +1,15 @@
 <section class="slide light">
-  <div class="lab-mark dark">ICI Lab</div>
-  <div class="content-kicker">{{kicker}}</div>
-  <h1 class="content-title">{{title}}</h1>
-  <div class="rule"></div>
+  <div class="lab-mark dark" data-ppt="text" data-ppt-role="lab-mark">ICI Lab</div>
+  <div class="content-kicker" data-ppt="text" data-ppt-role="kicker">{{kicker}}</div>
+  <h1 class="content-title" data-ppt="text" data-ppt-role="content-title">{{title}}</h1>
+  <div class="rule" data-ppt="rect" data-ppt-role="rule"></div>
   <div style="position:absolute;left:120px;top:278px;width:1260px;">
     <ul class="bullets">{{bullets}}</ul>
   </div>
-  <aside class="card" style="position:absolute;right:120px;top:278px;width:380px;min-height:420px;padding:34px;">
-    <div style="font-size:22px;color:var(--ici-main-blue);font-weight:800;margin-bottom:18px;">Key Point</div>
-    <div style="font-size:31px;line-height:1.28;font-weight:760;color:var(--ici-deep-blue);">{{highlight}}</div>
+  <aside class="card" data-ppt="card" data-ppt-role="key-card" style="position:absolute;right:120px;top:278px;width:380px;min-height:420px;padding:34px;">
+    <div data-ppt="text" data-ppt-role="key-card-label" style="font-size:22px;color:var(--ici-main-blue);font-weight:800;margin-bottom:18px;">Key Point</div>
+    <div data-ppt="text" data-ppt-role="key-card-body" style="font-size:31px;line-height:1.28;font-weight:760;color:var(--ici-deep-blue);">{{highlight}}</div>
   </aside>
-  <div class="footer dark">{{footer}}</div>
-  <div class="tri-squares"><span></span><span></span><span></span></div>
+  <div class="footer dark" data-ppt="text" data-ppt-role="footer">{{footer}}</div>
+  <div class="tri-squares"><span data-ppt="rect" data-ppt-role="tri-square"></span><span data-ppt="rect" data-ppt-role="tri-square"></span><span data-ppt="rect" data-ppt-role="tri-square"></span></div>
 </section>

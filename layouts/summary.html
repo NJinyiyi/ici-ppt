@@ -1,11 +1,11 @@
 <section class="slide light">
-  <div class="lab-mark dark">ICI Lab</div>
-  <div class="content-kicker">Summary</div>
-  <h1 class="content-title">{{title}}</h1>
-  <div class="rule"></div>
+  <div class="lab-mark dark" data-ppt="text" data-ppt-role="lab-mark">ICI Lab</div>
+  <div class="content-kicker" data-ppt="text" data-ppt-role="kicker">Summary</div>
+  <h1 class="content-title" data-ppt="text" data-ppt-role="content-title">{{title}}</h1>
+  <div class="rule" data-ppt="rect" data-ppt-role="rule"></div>
   <div style="position:absolute;left:120px;top:298px;width:1680px;display:grid;grid-template-columns:repeat(3,1fr);gap:30px;">
     {{summary_cards}}
   </div>
-  <div class="footer dark">{{footer}}</div>
-  <div class="tri-squares"><span></span><span></span><span></span></div>
+  <div class="footer dark" data-ppt="text" data-ppt-role="footer">{{footer}}</div>
+  <div class="tri-squares"><span data-ppt="rect" data-ppt-role="tri-square"></span><span data-ppt="rect" data-ppt-role="tri-square"></span><span data-ppt="rect" data-ppt-role="tri-square"></span></div>
 </section>

@@ -6,7 +6,9 @@ import re
 from pathlib import Path
 
 from dependencies import ensure_dependencies
+from dom_extractor import extract_layouts
 from editable_pptx_builder import build_editable_pptx
+from hybrid_pptx_builder import build_hybrid_pptx
 from html_renderer import render_html_files, render_pngs
 from planner import infer_title, plan_deck, read_input, validate_slide_plan
 from pptx_builder import build_pptx_from_pngs
@@ -26,7 +28,12 @@ def main() -> None:
     parser.add_argument("--pages", type=int, default=10, help="Target slide count, default 10.")
     parser.add_argument("--workdir", default="output/build", help="Intermediate HTML/PNG directory.")
     parser.add_argument("--renderer", choices=["auto", "browser", "pil"], default="auto", help="PNG renderer. Use pil only as a constrained-environment fallback.")
-    parser.add_argument("--pptx-mode", choices=["editable", "image"], default="editable", help="editable creates native PowerPoint text/shapes; image uses rendered PNG slides.")
+    parser.add_argument(
+        "--pptx-mode",
+        choices=["hybrid", "editable", "image"],
+        default="hybrid",
+        help="hybrid uses HTML layout plus editable PPT shapes; editable uses native preset layouts; image uses rendered PNG slides.",
+    )
     parser.add_argument("--no-auto-install", action="store_true", help="Disable automatic dependency installation.")
     args = parser.parse_args()
 
@@ -49,7 +56,29 @@ def main() -> None:
     validate_slide_plan(slides)
     toc_items = slides[1].data.get("items", []) if len(slides) > 1 and slides[1].layout == "toc" else []
     section_titles = [slide.title for slide in slides if slide.layout == "section"]
-    if args.pptx_mode == "editable":
+    if args.pptx_mode == "hybrid":
+        if args.renderer == "pil":
+            raise RuntimeError("Hybrid mode requires Playwright or a browser renderer; --renderer pil cannot extract HTML DOM layout.")
+        html_paths = render_html_files(slides, project_dir, html_dir)
+        png_paths = render_pngs(html_paths, png_dir, slides, renderer=args.renderer)
+        html_layouts = extract_layouts(html_paths)
+        build_hybrid_pptx(html_layouts, output_path, title)
+        report = {
+            "pptx": str(output_path),
+            "pptx_mode": "hybrid",
+            "pipeline": "Markdown -> HTML/CSS -> PNG preview -> DOM layout extraction -> editable python-pptx",
+            "slide_count": len(slides),
+            "toc_items": toc_items,
+            "section_titles": section_titles,
+            "png_count": len(png_paths),
+            "dom_item_count": sum(len(layout.get("items", [])) for layout in html_layouts),
+            "pptx_exists": output_path.exists(),
+            "pptx_size": output_path.stat().st_size if output_path.exists() else 0,
+            "font_family": "Alibaba PuHuiTi",
+        }
+        if not report["pptx_exists"] or report["pptx_size"] < 20_000 or report["png_count"] != len(slides):
+            raise RuntimeError(f"Hybrid PPTX quality check failed: {output_path}")
+    elif args.pptx_mode == "editable":
         build_editable_pptx(slides, output_path, title)
         report = {
             "pptx": str(output_path),

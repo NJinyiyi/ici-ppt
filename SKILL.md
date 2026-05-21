@@ -21,14 +21,15 @@ If important information is missing, make reasonable academic defaults and keep 
 
 ## Output
 
-Always produce a `.pptx` file. Default output uses editable PowerPoint text boxes and native shapes. The optional `--pptx-mode image` output preserves the previous full-slide PNG workflow.
+Always produce a `.pptx` file. Default output uses the hybrid workflow: HTML/CSS defines each slide, Playwright renders PNG previews and extracts DOM layout, then `python-pptx` rebuilds the slide as editable PowerPoint text boxes and native shapes. The optional `--pptx-mode image` output preserves the full-slide PNG workflow; `--pptx-mode editable` uses the older native preset layout builder without HTML/DOM extraction.
 
 1. Understand and condense the input.
 2. Plan a deck structure.
-3. Generate native PPT text boxes, cards, backgrounds, and decorations.
-4. Apply Alibaba PuHuiTi font names to all text.
-5. Use `python-pptx` to build a stable 16:9 PPTX.
-6. Run quality checks and report the final path.
+3. Generate one HTML/CSS page per slide at `1920x1080`.
+4. Render PNG previews and extract marked DOM element boxes, typography, and colors.
+5. Use `python-pptx` to rebuild editable text boxes, cards, backgrounds, and decorations.
+6. Apply Alibaba PuHuiTi font names to all text.
+7. Run quality checks and report the final path.
 
 For image mode only, generate one HTML/CSS page per slide at `1920x1080`, render each HTML slide to a PNG, then use `python-pptx` to insert each PNG as a full-slide image.
 
@@ -73,11 +74,11 @@ Use these layouts as appropriate:
 
 ## Quality Checks
 
-Before returning the deck, verify PPTX existence and size, slide order, text density, and that TOC entries match the section divider titles. In image mode, also verify PNG existence and size.
+Before returning the deck, verify PPTX existence and size, slide order, text density, and that TOC entries match the section divider titles. In hybrid and image modes, also verify PNG existence and size.
 
 ## Runtime Dependencies
 
-The bundled runner auto-installs missing `python-pptx` on first use. Image mode also auto-installs missing `playwright`, `Pillow`, and Playwright Chromium. This makes the skill usable after installation without a separate virtual environment setup.
+The bundled runner auto-installs missing `python-pptx` on first use. Hybrid and image modes also auto-install missing `playwright`, `Pillow`, and Playwright Chromium. This makes the skill usable after installation without a separate virtual environment setup.
 
 Use `--no-auto-install` or set `ICI_PPT_AUTO_INSTALL=0` when automatic installation is not allowed. If automatic installation fails because the environment is offline or locked down, tell the user to run:
 

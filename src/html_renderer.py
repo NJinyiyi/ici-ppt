@@ -86,16 +86,16 @@ def fill_template(template: str, slide: Slide) -> str:
 
 
 def bullet_html(items: Iterable[str]) -> str:
-    return "".join(f"<li>{html.escape(str(item))}</li>" for item in items)
+    return "".join(f"<li data-ppt='bullet'>{html.escape(str(item))}</li>" for item in items)
 
 
 def toc_html(items: Iterable[str]) -> str:
     cells = []
     for idx, item in enumerate(items, start=1):
         cells.append(
-            "<div style='display:grid;grid-template-columns:92px 1fr;gap:24px;align-items:start;'>"
-            f"<div style='font-size:46px;font-weight:850;color:rgba(255,255,255,0.92);'>{idx:02d}</div>"
-            f"<div style='font-size:34px;line-height:1.3;color:rgba(255,255,255,0.86);font-weight:650;padding-top:7px;'>{html.escape(str(item))}</div>"
+            "<div data-ppt='group' data-ppt-role='toc-item' style='display:grid;grid-template-columns:92px 1fr;gap:24px;align-items:start;'>"
+            f"<div data-ppt='text' data-ppt-role='toc-number' style='font-size:46px;font-weight:850;color:rgba(255,255,255,0.92);'>{idx:02d}</div>"
+            f"<div data-ppt='text' data-ppt-role='toc-title' style='font-size:34px;line-height:1.3;color:rgba(255,255,255,0.86);font-weight:650;padding-top:7px;'>{html.escape(str(item))}</div>"
             "</div>"
         )
     return "".join(cells)
@@ -105,9 +105,9 @@ def process_html(steps: Iterable[str]) -> str:
     cards = []
     for idx, step in enumerate(list(steps)[:4], start=1):
         cards.append(
-            "<div class='card' style='min-height:300px;padding:34px;border-top:8px solid var(--ici-main-blue);'>"
-            f"<div style='font-size:42px;font-weight:850;color:var(--ici-main-blue);margin-bottom:28px;'>{idx:02d}</div>"
-            f"<div style='font-size:30px;line-height:1.34;font-weight:700;color:var(--ici-deep-blue);'>{html.escape(str(step))}</div>"
+            "<div data-ppt='card' class='card' style='min-height:300px;padding:34px;border-top:8px solid var(--ici-main-blue);'>"
+            f"<div data-ppt='text' data-ppt-role='process-number' style='font-size:42px;font-weight:850;color:var(--ici-main-blue);margin-bottom:28px;'>{idx:02d}</div>"
+            f"<div data-ppt='text' data-ppt-role='process-step' style='font-size:30px;line-height:1.34;font-weight:700;color:var(--ici-deep-blue);'>{html.escape(str(step))}</div>"
             "</div>"
         )
     return "".join(cards)
@@ -117,9 +117,9 @@ def summary_cards_html(cards: Iterable[tuple[str, str]]) -> str:
     html_cards = []
     for title, body in list(cards)[:3]:
         html_cards.append(
-            "<div class='card' style='height:438px;padding:42px;border-top:8px solid var(--ici-cyan-green);'>"
-            f"<h2 style='font-size:36px;margin:0 0 30px;color:var(--ici-main-blue);'>{html.escape(title)}</h2>"
-            f"<p style='font-size:31px;line-height:1.35;margin:0;color:var(--ici-dark-text);font-weight:620;'>{html.escape(body)}</p>"
+            "<div data-ppt='card' class='card' style='height:438px;padding:42px;border-top:8px solid var(--ici-cyan-green);'>"
+            f"<h2 data-ppt='text' data-ppt-role='summary-title' style='font-size:36px;margin:0 0 30px;color:var(--ici-main-blue);'>{html.escape(title)}</h2>"
+            f"<p data-ppt='text' data-ppt-role='summary-body' style='font-size:31px;line-height:1.35;margin:0;color:var(--ici-dark-text);font-weight:620;'>{html.escape(body)}</p>"
             "</div>"
         )
     return "".join(html_cards)

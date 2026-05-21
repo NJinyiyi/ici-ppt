@@ -5,10 +5,10 @@
 The pipeline is:
 
 ```text
-Markdown input -> deck plan -> editable PowerPoint text/shapes -> 16:9 PPTX
+Markdown input -> deck plan -> HTML/CSS slides -> PNG preview -> DOM layout extraction -> editable PowerPoint text/shapes -> 16:9 PPTX
 ```
 
-The previous high-fidelity PNG workflow is still available with `--pptx-mode image`.
+This default `hybrid` mode uses HTML/CSS as the visual source of truth, renders PNGs for visual checking, then rebuilds the slide as editable PowerPoint objects. The older native preset workflow is still available with `--pptx-mode editable`; the full-slide PNG workflow is available with `--pptx-mode image`.
 
 The planner keeps the agenda and chapter dividers synchronized: every TOC item is a real section divider title, and body-slide topics sit under those chapters.
 
@@ -23,6 +23,8 @@ ici-ppt/
 ├── src/
 │   ├── main.py
 │   ├── planner.py
+│   ├── dom_extractor.py
+│   ├── hybrid_pptx_builder.py
 │   ├── editable_pptx_builder.py
 │   ├── html_renderer.py
 │   ├── pptx_builder.py
@@ -62,7 +64,7 @@ cd ici-ppt
 python3 src/main.py --input examples/example_input.md --output output/demo.pptx --title "AI Generated Creativity Never Ends"
 ```
 
-On first run, the default editable mode checks for `python-pptx`. Image mode also checks for `Pillow`, `playwright`, and Playwright Chromium. If something is missing, it runs:
+On first run, the default hybrid mode checks for `python-pptx`, `Pillow`, `playwright`, and Playwright Chromium. If something is missing, it runs:
 
 ```bash
 python3 -m pip install --user python-pptx Pillow playwright
@@ -82,7 +84,7 @@ To disable automatic installation:
 python3 src/main.py --input examples/example_input.md --output output/demo.pptx --no-auto-install
 ```
 
-If Playwright is not available but local Chrome/Chromium is installed, the renderer tries that as a fallback. If browser rendering is unavailable in a restricted environment, use `--renderer pil`.
+If browser rendering is unavailable in a restricted environment, use `--pptx-mode editable`. Image mode can use the constrained-environment Pillow fallback with `--renderer pil`, but hybrid mode requires Playwright because it extracts DOM layout.
 
 ## Run Demo
 
@@ -95,6 +97,12 @@ To use the high-fidelity rendered-image workflow:
 
 ```bash
 python src/main.py --input examples/example_input.md --output output/demo-image.pptx --title "AI Generated Creativity Never Ends" --pptx-mode image
+```
+
+To use the older native editable preset workflow without HTML/DOM extraction:
+
+```bash
+python src/main.py --input examples/example_input.md --output output/demo-editable.pptx --title "AI Generated Creativity Never Ends" --pptx-mode editable
 ```
 
 In a local environment where browser automation is unavailable, image mode can use the constrained-environment fallback:
@@ -129,14 +137,14 @@ The first level-1 heading is used as the title when `--title` is not provided. L
 
 ## Output
 
-The generated `.pptx` is 16:9 widescreen. Default output uses editable PowerPoint text boxes and native shapes with Alibaba PuHuiTi font names applied. Image mode renders each slide as a full-page `1920x1080` PNG and uses `python-pptx` to assemble the final deck.
+The generated `.pptx` is 16:9 widescreen. Default output uses HTML/CSS-derived coordinates to create editable PowerPoint text boxes and native shapes with Alibaba PuHuiTi font names applied. Image mode renders each slide as a full-page `1920x1080` PNG and uses `python-pptx` to assemble the final deck.
 
 PowerPoint does not automatically install or embed fonts from the Skill folder. To see the editable deck exactly as designed on another machine, install the bundled Alibaba PuHuiTi OTF files from `fonts/`.
 
 ## Common Issues
 
 - `Font fallback appears`: install the bundled Alibaba PuHuiTi OTF files from `fonts/`.
-- `No renderer available`: image mode needs Playwright and Chromium, or Google Chrome/Chromium locally.
+- `No renderer available`: hybrid mode needs Playwright and Chromium; use `--pptx-mode editable` if browser automation is unavailable.
 - `PowerPoint asks to repair the file`: make sure this version is using `python-pptx`; run `python3 -m pip install --user python-pptx` and regenerate the deck.
 - `PNG size mismatch`: rerun with Playwright; some Chrome CLI installations ignore `--window-size` under unusual display settings.
 - `PPTX too small`: inspect `output/rendered` and verify the slide PNGs were generated.
@@ -146,4 +154,4 @@ PowerPoint does not automatically install or embed fonts from the Skill folder. 
 1. Keep `SKILL.md` at the root of the `ici-ppt` folder.
 2. Keep code and assets in the same folder.
 3. Zip the entire `ici-ppt` directory or copy it into the skills directory used by your ChatGPT/Codex environment.
-4. Instruct the model to use `src/main.py` for deterministic generation. Default to editable PPTX mode; use `--pptx-mode image` only when exact rendered visual fidelity matters more than editability.
+4. Instruct the model to use `src/main.py` for deterministic generation. Default to hybrid PPTX mode; use `--pptx-mode image` only when exact rendered visual fidelity matters more than editability.

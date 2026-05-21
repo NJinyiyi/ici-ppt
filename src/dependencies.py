@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import os
+import site
 import subprocess
 import sys
 
@@ -12,9 +13,9 @@ def ensure_dependencies(renderer: str = "auto", pptx_mode: str = "image", auto_i
         auto_install = False
 
     required_packages = {"pptx": "python-pptx"}
-    if pptx_mode == "image":
+    if pptx_mode in {"image", "hybrid"}:
         required_packages["PIL"] = "Pillow"
-    if pptx_mode == "image" and renderer != "pil":
+    if pptx_mode in {"image", "hybrid"} and renderer != "pil":
         required_packages["playwright"] = "playwright"
 
     missing = [pip_name for module, pip_name in required_packages.items() if importlib.util.find_spec(module) is None]
@@ -28,7 +29,7 @@ def ensure_dependencies(renderer: str = "auto", pptx_mode: str = "image", auto_i
             )
         install_python_packages(missing)
 
-    if pptx_mode == "image" and renderer != "pil":
+    if pptx_mode in {"image", "hybrid"} and renderer != "pil":
         ensure_playwright_chromium(auto_install=auto_install)
 
 
@@ -37,6 +38,7 @@ def install_python_packages(packages: list[str]) -> None:
     cmd = [sys.executable, "-m", "pip", "install", "--user", *packages]
     result = subprocess.run(cmd)
     if result.returncode == 0:
+        refresh_import_paths()
         return
 
     # Some Python installations reject --user. Fall back to the active environment.
@@ -49,6 +51,16 @@ def install_python_packages(packages: list[str]) -> None:
             + " -m pip install "
             + " ".join(packages)
         )
+    refresh_import_paths()
+
+
+def refresh_import_paths() -> None:
+    import importlib
+
+    for path in {site.getusersitepackages(), *site.getsitepackages()}:
+        if path and path not in sys.path:
+            sys.path.append(path)
+    importlib.invalidate_caches()
 
 
 def ensure_playwright_chromium(auto_install: bool = True) -> None:
